@@ -1,5 +1,15 @@
 "use strict";
 
+process.on('uncaughtException', (error) => {
+    console.error('There was an uncaught error:', error);
+    // Optionally, you could restart the server or perform other recovery logic
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Log the reason and handle the rejection appropriately
+});
+
 const util = require('../lib/util');
 const sat = require('sat');
 const gameLogic = require('../game-logic');
@@ -170,7 +180,13 @@ exports.Player = class {
 
     // Performs a split initiated by the player.
     // Tries to split every cell in half.
-    userSplit(maxCells, defaultPlayerMass) {
+userSplit(maxCells, defaultPlayerMass) {
+    try {
+        if (!this.cells || this.cells.length === 0) {
+            console.error("Cells are not defined or empty during userSplit");
+            return;
+        }
+
         let cellsToCreate;
         if (this.cells.length > maxCells / 2) { // Not every cell can be split
             cellsToCreate = maxCells - this.cells.length + 1;
@@ -185,7 +201,12 @@ exports.Player = class {
         for (let i = 0; i < cellsToCreate; i++) {
             this.splitCell(i, 2, defaultPlayerMass);
         }
+    } catch (error) {
+        console.error("An error occurred in userSplit:", error);
+        // Optionally send an alert or handle cleanup logic here
     }
+}
+
 
     // Loops trough cells, and calls callback with colliding ones
     // Passes the colliding cells and their indexes to the callback
